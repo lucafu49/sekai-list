@@ -1,0 +1,26 @@
+:root {
+  --color-primary: #2D1B69;
+  --color-surface: #3D2A85;
+  --color-accent:  #F4C430;
+  --color-text:    #FFFFFF;
+  --color-muted:   #A89BC2;
+  --color-dark:    #1A0F3D;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Nunito', sans-serif;
+  font-weight: 400;
+  background-color: var(--color-primary);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+}
