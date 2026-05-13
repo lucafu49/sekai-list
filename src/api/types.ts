@@ -1,4 +1,7 @@
-// Request DTOs
+// Contratos de datos entre el frontend y la API REST del backend.
+// Los Request DTOs son los cuerpos que enviamos; los Response DTOs son lo que recibimos.
+
+// ── Request DTOs ────────────────────────────────────────────────────────────────
 
 export interface LoginRequest {
   username: string;
@@ -16,9 +19,10 @@ export interface ReviewRequest {
   score: number;
 }
 
-// Response DTOs
+// ── Response DTOs ───────────────────────────────────────────────────────────────
 
 export interface LoginResponse {
+  // El backend devuelve únicamente el JWT; el resto del perfil se extrae del propio token.
   token: string;
 }
 
@@ -28,7 +32,7 @@ export interface AnimeResponse {
   imageUrl: string;
   classic: boolean;
   averageScore: number;
-  userScore: number | null;
+  userScore: number | null; // null si el usuario autenticado no puntuó este anime todavía
 }
 
 export interface ReviewResponse {
@@ -40,20 +44,22 @@ export interface ReviewResponse {
   score: number;
 }
 
-// Spring Data pagination wrapper
+// ── Paginación ──────────────────────────────────────────────────────────────────
 
+// Envoltorio de Spring Data que devuelve el backend en los listados paginados.
 export interface Page<T> {
   content: T[];
   totalElements: number;
   totalPages: number;
-  number: number;
-  size: number;
+  number: number;   // página actual (base 0)
+  size: number;     // tamaño de página
   first: boolean;
   last: boolean;
 }
 
-// Error types
+// ── Errores ─────────────────────────────────────────────────────────────────────
 
+// Estructura del cuerpo de error que devuelve el backend ante respuestas 4xx/5xx.
 export interface ApiError {
   status: number;
   error: string;
@@ -61,6 +67,8 @@ export interface ApiError {
   timestamp: string;
 }
 
+// Clase de error que envuelve ApiError para poder distinguirlo de otros errores en catch.
+// Permite acceder a `err.apiError.message` con tipado completo.
 export class ApiException extends Error {
   readonly apiError: ApiError;
 

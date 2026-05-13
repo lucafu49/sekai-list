@@ -37,7 +37,7 @@ export function LoginPage() {
     <div className={styles.page}>
       <div className={styles.card}>
         <h1 className={styles.title}>SekaiList</h1>
-        <form onSubmit={handleSubmit} noValidate>
+        <form className={styles.form} onSubmit={handleSubmit} noValidate>
           <div className={styles.field}>
             <label htmlFor="username">Usuario</label>
             <input

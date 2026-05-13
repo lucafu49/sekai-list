@@ -1,6 +1,13 @@
+// Cliente HTTP base de la aplicación.
+// Centraliza fetch, manejo de token JWT y errores de la API.
+// Todos los módulos de recursos (animes, reviews, etc.) pasan por el objeto `api` exportado al final.
+
 import { type ApiError, ApiException } from './types';
 
+// La URL base se lee de la variable de entorno; si no está definida, apunta al backend local.
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
+
+// Clave bajo la que se guarda el JWT en localStorage.
 const TOKEN_KEY = 'sekailist_token';
 
 export function getToken(): string | null {
@@ -15,6 +22,8 @@ export function clearToken(): void {
   localStorage.removeItem(TOKEN_KEY);
 }
 
+// Función interna que realiza todas las peticiones HTTP.
+// Inyecta el token Bearer si existe y parsea la respuesta como JSON.
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
 
@@ -28,15 +37,18 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   });
 
   if (res.ok) {
+    // 204 No Content no trae body: devolvemos undefined casteado al tipo esperado.
     if (res.status === 204) return undefined as T;
     return res.json() as Promise<T>;
   }
 
   const apiError: ApiError = await res.json();
+  // Un 401 significa que el token expiró o es inválido: lo eliminamos para forzar re-login.
   if (res.status === 401) clearToken();
   throw new ApiException(apiError);
 }
 
+// Interfaz pública del cliente. Cada método es un atajo tipado sobre `request`.
 export const api = {
   get: <T>(path: string) => request<T>('GET', path),
   post: <T>(path: string, body?: unknown) => request<T>('POST', path, body),

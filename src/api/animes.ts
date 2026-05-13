@@ -1,14 +1,20 @@
+// Acceso al recurso /animes del backend.
+// Incluye listado paginado con filtros, detalle, creación, edición y eliminación.
+
 import { type AnimeRequest, type AnimeResponse, type Page } from './types';
 import { api } from './client';
 
+// Parámetros opcionales de filtrado y paginación para el listado de animes.
 export interface GetAnimesParams {
   name?: string;
   classic?: boolean;
   sort?: 'name' | 'score';
   page?: number;
-  unreviewed?: boolean;
+  unreviewed?: boolean; // si es true, devuelve solo los animes que el usuario aún no puntuó
 }
 
+// Construye la query string solo con los parámetros que fueron provistos,
+// ya que URLSearchParams omite claves no establecidas automáticamente.
 export async function getAnimes(params?: GetAnimesParams): Promise<Page<AnimeResponse>> {
   const qs = new URLSearchParams();
   if (params) {

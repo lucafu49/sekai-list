@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { LoginPage } from './pages/LoginPage'
 import { ProtectedRoute } from './auth/ProtectedRoute'
+import { AppLayout } from './layouts/AppLayout'
 
 function App() {
   return (
@@ -8,7 +9,9 @@ function App() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route element={<ProtectedRoute />}>
-          <Route path="/" element={<div>Home — próximamente</div>} />
+          <Route element={<AppLayout />}>
+            <Route path="/" element={<div>Home — próximamente</div>} />
+          </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
