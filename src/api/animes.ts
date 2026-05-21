@@ -10,6 +10,7 @@ export interface GetAnimesParams {
   classic?: boolean;
   sort?: 'name' | 'score';
   page?: number;
+  size?: number;
   unreviewed?: boolean; // si es true, devuelve solo los animes que el usuario aún no puntuó
 }
 
@@ -22,6 +23,7 @@ export async function getAnimes(params?: GetAnimesParams): Promise<Page<AnimeRes
     if (params.classic !== undefined)  qs.set('classic', String(params.classic));
     if (params.sort)                   qs.set('sort', params.sort);
     if (params.page !== undefined)     qs.set('page', String(params.page));
+    if (params.size !== undefined)     qs.set('size', String(params.size));
     if (params.unreviewed)             qs.set('unreviewed', 'true');
   }
   const query = qs.toString() ? `?${qs}` : '';

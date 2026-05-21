@@ -31,17 +31,20 @@ export interface AnimeResponse {
   name: string;
   imageUrl: string;
   classic: boolean;
-  averageScore: number;
-  userScore: number | null; // null si el usuario autenticado no puntuó este anime todavía
+  averageScore: number | null; // null si el anime aún no tiene ninguna reseña
+  ratingCount: number;         // cantidad de usuarios que puntuaron el anime
+  userScore: number | null;    // null si el usuario autenticado no puntuó este anime todavía
 }
 
 export interface ReviewResponse {
   idReview: number;
   animeId: number;
   animeName: string;
+  animeImageUrl: string | null; // null si el anime no tiene imagen cargada
   userId: number;
   username: string;
   score: number;
+  createdAt: string; // ISO timestamp — usado para mostrar tiempo relativo ("hace Xh")
 }
 
 // ── Paginación ──────────────────────────────────────────────────────────────────

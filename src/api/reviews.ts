@@ -1,7 +1,7 @@
 // Acceso al recurso /reviews del backend.
 // Las reseñas asocian un usuario con un anime y contienen un puntaje numérico.
 
-import { type ReviewRequest, type ReviewResponse } from './types';
+import { type ReviewRequest, type ReviewResponse, type Page } from './types';
 import { api } from './client';
 
 // Crea o actualiza la reseña del usuario autenticado sobre un anime (upsert).
@@ -28,4 +28,13 @@ export function getReviewsByUser(userId: number): Promise<ReviewResponse[]> {
 // El backend identifica la reseña a eliminar por animeId + usuario autenticado en el token.
 export function deleteReview(animeId: number): Promise<void> {
   return api.delete<void>(`/reviews/${animeId}`);
+}
+
+// Listado paginado de todas las reseñas (todas las del sistema, ordenadas por fecha).
+export function getReviews(params?: { page?: number; size?: number }): Promise<Page<ReviewResponse>> {
+  const qs = new URLSearchParams();
+  if (params?.page !== undefined) qs.set('page', String(params.page));
+  if (params?.size !== undefined) qs.set('size', String(params.size));
+  const query = qs.toString() ? `?${qs}` : '';
+  return api.get<Page<ReviewResponse>>(`/reviews${query}`);
 }
