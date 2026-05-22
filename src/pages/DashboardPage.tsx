@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { TrendingUp } from 'lucide-react'
 import { getAnimes, getReviews } from '../api'
 import type { AnimeResponse, ReviewResponse } from '../api'
@@ -58,6 +59,7 @@ function ReviewCardSkeleton() {
 }
 
 export function DashboardPage() {
+  const navigate = useNavigate()
   const [topAnimes, setTopAnimes] = useState<AnimeResponse[]>([])
   const [reviews, setReviews] = useState<ReviewResponse[]>([])
   const [loading, setLoading] = useState(true)
@@ -88,7 +90,8 @@ export function DashboardPage() {
               <div
                 key={anime.idAnime}
                 className={styles.topCard}
-                style={{ animationDelay: `${i * 80}ms` }}
+                style={{ animationDelay: `${i * 80}ms`, cursor: 'pointer' }}
+                onClick={() => navigate(`/anime/${anime.idAnime}`)}
               >
                 <div className={styles.leftCol}>
                   <span className={styles.rank}>{i + 1}</span>
@@ -131,7 +134,11 @@ export function DashboardPage() {
                 </div>
 
                 {/* Inner card: cover · título · score */}
-                <div className={styles.reviewInner}>
+                <div
+                  className={styles.reviewInner}
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => navigate(`/anime/${review.animeId}`)}
+                >
                   {review.animeImageUrl
                     ? <img src={review.animeImageUrl} alt={review.animeName} className={styles.reviewCoverImg} />
                     : <div className={styles.reviewCover}>

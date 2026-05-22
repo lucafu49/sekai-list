@@ -73,6 +73,12 @@
   align-items: stretch;
   gap: 16px;
   animation: fadeSlideUp 0.4s ease-out both;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.topCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
 .leftCol {
@@ -162,6 +168,12 @@
   flex-direction: column;
   gap: 12px;
   animation: fadeSlideUp 0.4s ease-out both;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.reviewCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
 }
 
 /* Fila superior: avatar · usuario · puntuó · tiempo */
@@ -210,6 +222,11 @@
   display: flex;
   align-items: center;
   gap: 14px;
+  transition: background-color 0.15s ease;
+}
+
+.reviewInner:hover {
+  background-color: rgba(26, 15, 61, 0.6);
 }
 
 /* Imagen de portada real */
