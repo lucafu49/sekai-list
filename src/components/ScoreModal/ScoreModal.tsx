@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 import { upsertReview } from '../../api'
+import { useToast } from '../../context/ToastContext'
 import styles from './ScoreModal.module.css'
 
 interface ScoreModalProps {
@@ -16,6 +17,7 @@ export function ScoreModal({ animeName, animeId, currentScore, onClose, onSucces
   const [score, setScore] = useState<number>(currentScore ?? 0)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { showToast } = useToast()
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
@@ -32,6 +34,7 @@ export function ScoreModal({ animeName, animeId, currentScore, onClose, onSucces
     setError(null)
     try {
       await upsertReview({ animeId, score })
+      showToast(`Score saved for ${animeName}!`)
       onSuccess()
       onClose()
     } catch {

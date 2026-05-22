@@ -1,0 +1,208 @@
+@keyframes backdropIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.94) translateY(10px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0); }
+}
+
+/* ── Backdrop ──────────────────────────────────────────────────── */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: backdropIn 0.18s ease-out both;
+}
+
+/* ── Modal ─────────────────────────────────────────────────────── */
+
+.modal {
+  background-color: var(--color-surface);
+  border-radius: 18px;
+  width: 420px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  animation: modalIn 0.2s ease-out both;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+
+/* ── Header ────────────────────────────────────────────────────── */
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.animeInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.thumbnail {
+  width: 40px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 6px;
+  flex-shrink: 0;
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.animeName {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  color: var(--color-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: color 0.15s, background-color 0.15s;
+}
+
+.closeBtn:hover {
+  color: var(--color-text);
+  background-color: rgba(255, 255, 255, 0.09);
+}
+
+/* ── Score ─────────────────────────────────────────────────────── */
+
+.scoreSection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.scoreLabel {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.scoreInputWrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.scoreInput {
+  flex: 1;
+  background: var(--color-primary);
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  color: var(--color-text);
+  font-size: 2.2rem;
+  font-weight: 800;
+  font-family: 'Nunito', sans-serif;
+  padding: 14px 16px;
+  text-align: center;
+  outline: none;
+  transition: border-color 0.15s;
+  -moz-appearance: textfield;
+}
+
+.scoreInput::-webkit-outer-spin-button,
+.scoreInput::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.scoreInput::placeholder {
+  color: var(--color-muted);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.scoreInput:focus {
+  border-color: var(--color-accent);
+}
+
+.scoreMax {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--color-muted);
+  flex-shrink: 0;
+}
+
+.error {
+  font-size: 0.82rem;
+  color: #ff6b6b;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* ── Actions ───────────────────────────────────────────────────── */
+
+.actions {
+  display: flex;
+  gap: 10px;
+}
+
+.changeBtn {
+  flex: 0 0 auto;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  color: var(--color-text);
+  cursor: pointer;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 13px 20px;
+  transition: background-color 0.15s;
+}
+
+.changeBtn:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+.postBtn {
+  flex: 1;
+  background-color: var(--color-accent);
+  border: none;
+  border-radius: 10px;
+  color: var(--color-dark);
+  cursor: pointer;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 800;
+  padding: 13px;
+  transition: opacity 0.15s, transform 0.12s;
+}
+
+.postBtn:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.postBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none;
+}
