@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, PenLine } from 'lucide-react'
 import { getAnime, getReviewsByAnime } from '../api'
 import type { AnimeResponse, ReviewResponse } from '../api'
+import { ScoreModal } from '../components/ScoreModal/ScoreModal'
 import styles from './AnimeDetailPage.module.css'
 
 function timeAgo(iso: string): string {
@@ -58,6 +59,7 @@ export function AnimeDetailPage() {
   const [anime, setAnime] = useState<AnimeResponse | null>(null)
   const [reviews, setReviews] = useState<ReviewResponse[]>([])
   const [loading, setLoading] = useState(true)
+  const [modalOpen, setModalOpen] = useState(false)
 
   useEffect(() => {
     if (!animeId) return
@@ -69,6 +71,16 @@ export function AnimeDetailPage() {
       })
       .finally(() => setLoading(false))
   }, [animeId])
+
+  function refresh() {
+    if (!animeId) return
+    const id = Number(animeId)
+    Promise.all([getAnime(id), getReviewsByAnime(id)])
+      .then(([animeData, reviewsData]) => {
+        setAnime(animeData)
+        setReviews([...reviewsData].sort((a, b) => b.score - a.score))
+      })
+  }
 
   return (
     <div className={styles.page}>
@@ -99,7 +111,7 @@ export function AnimeDetailPage() {
             <div className={styles.heroInfo}>
               <span className={styles.groupLabel}>Página del grupo</span>
               <h1 className={styles.title}>{anime.name}</h1>
-              <button className={styles.editBtn}>
+              <button className={styles.editBtn} onClick={() => setModalOpen(true)}>
                 <PenLine size={15} />
                 Editar tu puntuación
               </button>
@@ -156,6 +168,16 @@ export function AnimeDetailPage() {
               </div>
             )}
           </div>
+
+          {modalOpen && (
+            <ScoreModal
+              animeName={anime.name}
+              animeId={anime.idAnime}
+              currentScore={anime.userScore}
+              onClose={() => setModalOpen(false)}
+              onSuccess={refresh}
+            />
+          )}
         </>
       )}
     </div>

@@ -1,0 +1,169 @@
+/* ── Keyframes ─────────────────────────────────────────────────── */
+
+@keyframes backdropIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.92) translateY(12px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ── Backdrop ──────────────────────────────────────────────────── */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: backdropIn 0.18s ease-out both;
+}
+
+/* ── Modal container ───────────────────────────────────────────── */
+
+.modal {
+  background-color: var(--color-surface);
+  border-radius: 18px;
+  padding: 36px 32px 28px;
+  width: 380px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: modalIn 0.2s ease-out both;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+/* ── Close button ──────────────────────────────────────────────── */
+
+.closeBtn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  color: var(--color-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 6px;
+  transition: color 0.15s, background-color 0.15s;
+}
+
+.closeBtn:hover {
+  color: var(--color-text);
+  background-color: rgba(255, 255, 255, 0.07);
+}
+
+/* ── Header ────────────────────────────────────────────────────── */
+
+.label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-muted);
+  margin: 0;
+}
+
+.animeName {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--color-text);
+  margin: 0;
+  line-height: 1.2;
+}
+
+/* ── Score selector ────────────────────────────────────────────── */
+
+.scoreLabel {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--color-muted);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.scoreInputWrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.scoreInput {
+  flex: 1;
+  background: var(--color-primary);
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  color: var(--color-text);
+  font-size: 2rem;
+  font-weight: 800;
+  font-family: inherit;
+  padding: 12px 16px;
+  text-align: center;
+  outline: none;
+  transition: border-color 0.15s;
+  -moz-appearance: textfield;
+}
+
+.scoreInput::-webkit-outer-spin-button,
+.scoreInput::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.scoreInput::placeholder {
+  color: var(--color-muted);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.scoreInput:focus {
+  border-color: var(--color-accent);
+}
+
+.scoreMax {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--color-muted);
+  flex-shrink: 0;
+}
+
+/* ── Error ─────────────────────────────────────────────────────── */
+
+.error {
+  font-size: 0.82rem;
+  color: #ff6b6b;
+  margin: 0;
+  font-weight: 600;
+}
+
+/* ── Submit button ─────────────────────────────────────────────── */
+
+.submitBtn {
+  width: 100%;
+  padding: 13px;
+  background-color: var(--color-accent);
+  color: var(--color-dark);
+  border: none;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.12s;
+}
+
+.submitBtn:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.submitBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

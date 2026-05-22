@@ -47,6 +47,21 @@ export interface ReviewResponse {
   createdAt: string; // ISO timestamp — usado para mostrar tiempo relativo ("hace Xh")
 }
 
+export interface CircleMemberRating {
+  username: string;
+  score: number | null; // null si el miembro aún no puntuó este título
+}
+
+export interface TitleResponse {
+  idAnime: number;
+  name: string;
+  imageUrl: string;
+  circleAverageScore: number | null;
+  circleRatingCount: number;
+  totalCircleSize: number;
+  ratings: CircleMemberRating[];
+}
+
 // ── Paginación ──────────────────────────────────────────────────────────────────
 
 // Envoltorio de Spring Data que devuelve el backend en los listados paginados.

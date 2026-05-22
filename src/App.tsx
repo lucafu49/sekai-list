@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { LoginPage } from './pages/LoginPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { AnimeDetailPage } from './pages/AnimeDetailPage'
+import { TitlesPage } from './pages/TitlesPage'
 import { ProtectedRoute } from './auth/ProtectedRoute'
 import { AppLayout } from './layouts/AppLayout'
 
@@ -13,6 +14,7 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
             <Route path="/" element={<DashboardPage />} />
+            <Route path="/titles" element={<TitlesPage />} />
             <Route path="/anime/:animeId" element={<AnimeDetailPage />} />
           </Route>
         </Route>
