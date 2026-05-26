@@ -206,3 +206,10 @@
   cursor: not-allowed;
   transform: none;
 }
+
+@media (max-width: 768px) {
+  .modal {
+    width: calc(100% - 24px);
+    border-radius: 14px;
+  }
+}

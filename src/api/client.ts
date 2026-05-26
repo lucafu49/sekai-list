@@ -10,12 +10,17 @@ const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
 // Clave bajo la que se guarda el JWT en localStorage.
 const TOKEN_KEY = 'sekailist_token';
 
+// Flag para evitar que múltiples requests 401 concurrentes disparen el evento varias veces.
+// Se resetea en setToken() cuando el usuario vuelve a iniciar sesión.
+let sessionExpiredFired = false;
+
 export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);
 }
 
 export function setToken(token: string): void {
   localStorage.setItem(TOKEN_KEY, token);
+  sessionExpiredFired = false;
 }
 
 export function clearToken(): void {
@@ -43,8 +48,15 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   }
 
   const apiError: ApiError = await res.json();
-  // Un 401 significa que el token expiró o es inválido: lo eliminamos para forzar re-login.
-  if (res.status === 401) clearToken();
+  // Un 401 significa que el token expiró o es inválido: lo eliminamos y notificamos a la app.
+  // El flag evita que múltiples requests fallidas simultáneas disparen el evento más de una vez.
+  if (res.status === 401) {
+    clearToken();
+    if (!sessionExpiredFired) {
+      sessionExpiredFired = true;
+      window.dispatchEvent(new CustomEvent('session-expired'));
+    }
+  }
   throw new ApiException(apiError);
 }
 

@@ -328,3 +328,68 @@
 .skAvatar { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; }
 .skBar    { flex: 1; height: 6px; border-radius: 3px; }
 .skBadge  { width: 64px; height: 32px; border-radius: 20px; flex-shrink: 0; }
+
+@media (max-width: 768px) {
+  .page {
+    padding: 20px 16px 32px;
+    gap: 24px;
+  }
+
+  .hero {
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .coverWrap {
+    width: 160px;
+  }
+
+  .cover {
+    width: 160px;
+    height: 220px;
+  }
+
+  .coverPlaceholder {
+    width: 160px;
+    height: 220px;
+    font-size: 3rem;
+  }
+
+  .heroInfo {
+    align-items: center;
+    text-align: center;
+    gap: 12px;
+  }
+
+  .title {
+    font-size: 2rem;
+  }
+
+  .groupCard {
+    padding: 20px 16px;
+    gap: 16px;
+  }
+
+  .avgScore {
+    font-size: 3.5rem;
+  }
+
+  .nameCol {
+    min-width: 80px;
+  }
+
+  .reviewRow {
+    gap: 10px;
+  }
+
+  .timeAgo {
+    min-width: 44px;
+    font-size: 0.72rem;
+  }
+
+  .skCover {
+    width: 160px;
+    height: 220px;
+  }
+}

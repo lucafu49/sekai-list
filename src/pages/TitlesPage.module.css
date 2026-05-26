@@ -198,3 +198,27 @@
 .skAvatars { width: 80px; height: 30px; border-radius: 15px; }
 .skCount   { width: 48px; height: 14px; border-radius: 4px; }
 .skBadge   { width: 64px; height: 32px; border-radius: 20px; }
+
+@media (max-width: 768px) {
+  .page {
+    padding: 20px 16px;
+    gap: 20px;
+  }
+
+  .heading {
+    font-size: 1.6rem;
+  }
+
+  .card {
+    padding: 12px 14px;
+    gap: 12px;
+  }
+
+  .avatarStack {
+    display: none;
+  }
+
+  .ratedCount {
+    display: none;
+  }
+}

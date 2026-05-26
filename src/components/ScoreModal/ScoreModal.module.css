@@ -167,3 +167,10 @@
   opacity: 0.55;
   cursor: not-allowed;
 }
+
+@media (max-width: 768px) {
+  .modal {
+    width: calc(100% - 32px);
+    padding: 28px 20px 22px;
+  }
+}

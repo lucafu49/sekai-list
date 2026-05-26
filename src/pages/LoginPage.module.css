@@ -114,3 +114,10 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+@media (max-width: 768px) {
+  .card {
+    width: calc(100% - 32px);
+    padding: 32px 24px;
+  }
+}

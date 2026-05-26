@@ -1,18 +1,21 @@
 import { createContext, useCallback, useContext, useState } from 'react'
 import { createPortal } from 'react-dom'
 import styles from './Toast.module.css'
-import { CheckCircle } from 'lucide-react'
+import { CheckCircle, AlertTriangle } from 'lucide-react'
 
 // ── Types ────────────────────────────────────────────────────────────────────
+
+type ToastType = 'success' | 'warning'
 
 interface Toast {
   id: number
   message: string
+  type: ToastType
   exiting?: boolean
 }
 
 interface ToastContextValue {
-  showToast: (message: string) => void
+  showToast: (message: string, type?: ToastType) => void
 }
 
 // ── Context ──────────────────────────────────────────────────────────────────
@@ -32,9 +35,9 @@ let nextId = 0
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([])
 
-  const showToast = useCallback((message: string) => {
+  const showToast = useCallback((message: string, type: ToastType = 'success') => {
     const id = ++nextId
-    setToasts(prev => [...prev, { id, message }])
+    setToasts(prev => [...prev, { id, message, type }])
     // Marca como exiting para disparar la animación de salida
     setTimeout(() => {
       setToasts(prev => prev.map(t => t.id === id ? { ...t, exiting: true } : t))
@@ -53,9 +56,12 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           {toasts.map(toast => (
             <div
               key={toast.id}
-              className={`${styles.toast} ${toast.exiting ? styles.toastExiting : ''}`}
+              className={`${styles.toast} ${styles[toast.type]} ${toast.exiting ? styles.toastExiting : ''}`}
             >
-              <CheckCircle size={18} className={styles.icon} />
+              {toast.type === 'warning'
+                ? <AlertTriangle size={18} className={styles.icon} />
+                : <CheckCircle size={18} className={styles.icon} />
+              }
               <span>{toast.message}</span>
             </div>
           ))}

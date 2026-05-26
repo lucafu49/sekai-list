@@ -287,3 +287,27 @@
 
 /* Skeleton extra para inner cover */
 .skInnerCover { width: 52px; height: 68px; border-radius: 6px; flex-shrink: 0; }
+
+@media (max-width: 768px) {
+  .page {
+    padding: 20px 16px;
+    gap: 32px;
+  }
+
+  .topGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .topCard {
+    padding: 16px;
+  }
+
+  .reviewCard {
+    padding: 14px 16px;
+  }
+
+  .reviewInner {
+    padding: 12px 14px;
+    gap: 12px;
+  }
+}
