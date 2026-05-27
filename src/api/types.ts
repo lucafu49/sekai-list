@@ -56,6 +56,7 @@ export interface TitleResponse {
   idAnime: number;
   name: string;
   imageUrl: string;
+  classic: boolean;
   circleAverageScore: number | null;
   circleRatingCount: number;
   totalCircleSize: number;

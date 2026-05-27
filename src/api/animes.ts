@@ -11,7 +11,8 @@ export interface GetAnimesParams {
   sort?: 'name' | 'score';
   page?: number;
   size?: number;
-  unreviewed?: boolean; // si es true, devuelve solo los animes que el usuario aún no puntuó
+  unreviewed?: boolean;    // si es true, devuelve solo los animes que el usuario aún no puntuó
+  reviewedBy?: number;     // si se provee, devuelve solo los animes que ese userId puntuó
 }
 
 // Construye la query string solo con los parámetros que fueron provistos,
@@ -25,6 +26,7 @@ export async function getAnimes(params?: GetAnimesParams): Promise<Page<AnimeRes
     if (params.page !== undefined)     qs.set('page', String(params.page));
     if (params.size !== undefined)     qs.set('size', String(params.size));
     if (params.unreviewed)             qs.set('unreviewed', 'true');
+    if (params.reviewedBy !== undefined) qs.set('reviewedBy', String(params.reviewedBy));
   }
   const query = qs.toString() ? `?${qs}` : '';
   return api.get<Page<AnimeResponse>>(`/animes${query}`);

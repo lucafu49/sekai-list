@@ -35,7 +35,7 @@ export function Navbar() {
   const [open,     setOpen]     = useState(false)
   const [loading,  setLoading]  = useState(false)
 
-  const debounceRef   = useRef<ReturnType<typeof setTimeout>>()
+  const debounceRef   = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const wrapperRef    = useRef<HTMLDivElement>(null)
   const latestQuery   = useRef('')
 

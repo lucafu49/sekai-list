@@ -5,6 +5,7 @@ import { DashboardPage } from './pages/DashboardPage'
 import { AnimeDetailPage } from './pages/AnimeDetailPage'
 import { TitlesPage } from './pages/TitlesPage'
 import { SearchPage } from './pages/SearchPage'
+import { UserPage } from './pages/UserPage'
 import { ProtectedRoute } from './auth/ProtectedRoute'
 import { AppLayout } from './layouts/AppLayout'
 import { useAuth } from './auth/AuthContext'
@@ -41,6 +42,7 @@ function App() {
             <Route path="/titles" element={<TitlesPage />} />
             <Route path="/search" element={<SearchPage />} />
             <Route path="/anime/:animeId" element={<AnimeDetailPage />} />
+            <Route path="/user/:userId" element={<UserPage />} />
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

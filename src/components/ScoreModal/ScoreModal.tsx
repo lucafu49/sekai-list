@@ -34,7 +34,10 @@ export function ScoreModal({ animeName, animeId, currentScore, onClose, onSucces
     setError(null)
     try {
       await upsertReview({ animeId, score })
-      showToast(`Score saved for ${animeName}!`)
+      showToast(currentScore === null
+        ? `Puntuación agregada para ${animeName}`
+        : `Puntuación actualizada para ${animeName}`
+      )
       onSuccess()
       onClose()
     } catch {

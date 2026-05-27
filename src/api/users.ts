@@ -1,7 +1,20 @@
 // Utilidades para obtener información del usuario autenticado.
 // En lugar de hacer una llamada extra al backend, extrae los datos del JWT almacenado localmente.
 
-import { getToken } from './client';
+import { api, getToken } from './client';
+
+// ── Tipos ─────────────────────────────────────────────────────────────────────
+
+export interface UserResponse {
+  idUser: number;
+  username: string;
+}
+
+// ── Endpoints ─────────────────────────────────────────────────────────────────
+
+export function getUsers(): Promise<UserResponse[]> {
+  return api.get<UserResponse[]>('/users');
+}
 
 // Datos del usuario que el resto de la app necesita conocer.
 export interface CurrentUser {

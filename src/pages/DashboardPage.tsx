@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { TrendingUp } from 'lucide-react'
-import { getAnimes, getReviews } from '../api'
+import { getAnimes, getReviews, getUsers } from '../api'
 import type { AnimeResponse, ReviewResponse } from '../api'
 import styles from './DashboardPage.module.css'
 
@@ -22,8 +22,6 @@ function timeAgo(iso: string): string {
 function initials(username: string): string {
   return username.slice(0, 2).toUpperCase()
 }
-
-const TOTAL_USERS = 4
 
 function TopCardSkeleton() {
   return (
@@ -60,18 +58,21 @@ function ReviewCardSkeleton() {
 
 export function DashboardPage() {
   const navigate = useNavigate()
-  const [topAnimes, setTopAnimes] = useState<AnimeResponse[]>([])
-  const [reviews, setReviews] = useState<ReviewResponse[]>([])
-  const [loading, setLoading] = useState(true)
+  const [topAnimes,  setTopAnimes]  = useState<AnimeResponse[]>([])
+  const [reviews,    setReviews]    = useState<ReviewResponse[]>([])
+  const [totalUsers, setTotalUsers] = useState(0)
+  const [loading,    setLoading]    = useState(true)
 
   useEffect(() => {
     Promise.all([
       getAnimes({ sort: 'score', page: 0 }),
       getReviews({ page: 0, size: 20 }),
+      getUsers(),
     ])
-      .then(([animePage, reviewPage]) => {
+      .then(([animePage, reviewPage, users]) => {
         setTopAnimes(animePage.content.slice(0, 3))
         setReviews(reviewPage.content)
+        setTotalUsers(users.length)
       })
       .finally(() => setLoading(false))
   }, [])
@@ -104,7 +105,7 @@ export function DashboardPage() {
                 <div className={styles.topInfo}>
                   <p className={styles.animeName}>{anime.name}</p>
                   <p className={styles.ratingCount}>
-                    {anime.ratingCount} de {TOTAL_USERS} puntuaron
+                    {anime.ratingCount} de {totalUsers} puntuaron
                   </p>
                 </div>
               </div>

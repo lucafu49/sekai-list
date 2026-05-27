@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, PenLine } from 'lucide-react'
-import { getAnime, getReviewsByAnime } from '../api'
+import { ArrowLeft, PenLine, Trash2, Pencil } from 'lucide-react'
+import { getAnime, getReviewsByAnime, deleteReview, deleteAnime } from '../api'
 import type { AnimeResponse, ReviewResponse } from '../api'
 import { ScoreModal } from '../components/ScoreModal/ScoreModal'
+import { AddAnimeModal } from '../components/AddAnimeModal/AddAnimeModal'
 import styles from './AnimeDetailPage.module.css'
 
 function timeAgo(iso: string): string {
@@ -18,6 +20,49 @@ function timeAgo(iso: string): string {
 function initials(username: string): string {
   return username.slice(0, 2).toUpperCase()
 }
+
+// ── Modal de confirmación genérico ───────────────────────────────────────────
+
+interface DeleteConfirmProps {
+  title: string
+  body: React.ReactNode
+  confirmLabel?: string
+  deleting: boolean
+  error?: string
+  onCancel: () => void
+  onConfirm: () => void
+}
+
+function DeleteConfirmModal({
+  title,
+  body,
+  confirmLabel = 'Eliminar',
+  deleting,
+  error,
+  onCancel,
+  onConfirm,
+}: DeleteConfirmProps) {
+  return createPortal(
+    <div className={styles.backdrop} onClick={onCancel}>
+      <div className={styles.confirmModal} onClick={e => e.stopPropagation()}>
+        <h2 className={styles.confirmTitle}>{title}</h2>
+        <p className={styles.confirmBody}>{body}</p>
+        {error && <p className={styles.confirmError}>{error}</p>}
+        <div className={styles.confirmActions}>
+          <button className={styles.cancelBtn} onClick={onCancel} disabled={deleting}>
+            Cancelar
+          </button>
+          <button className={styles.deleteBtn} onClick={onConfirm} disabled={deleting}>
+            {deleting ? 'Eliminando...' : confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
+  )
+}
+
+// ── Skeletons ────────────────────────────────────────────────────────────────
 
 function HeroSkeleton() {
   return (
@@ -53,13 +98,31 @@ function GroupCardSkeleton() {
   )
 }
 
+// ── Page ─────────────────────────────────────────────────────────────────────
+
 export function AnimeDetailPage() {
   const { animeId } = useParams<{ animeId: string }>()
   const navigate = useNavigate()
-  const [anime, setAnime] = useState<AnimeResponse | null>(null)
+
+  const [anime,   setAnime]   = useState<AnimeResponse | null>(null)
   const [reviews, setReviews] = useState<ReviewResponse[]>([])
   const [loading, setLoading] = useState(true)
-  const [modalOpen, setModalOpen] = useState(false)
+  const [error,   setError]   = useState(false)
+
+  // Score modal
+  const [scoreOpen, setScoreOpen] = useState(false)
+
+  // Eliminar puntuación
+  const [deleteReviewOpen, setDeleteReviewOpen] = useState(false)
+  const [deletingReview,   setDeletingReview]   = useState(false)
+
+  // Editar anime
+  const [editAnimeOpen, setEditAnimeOpen] = useState(false)
+
+  // Eliminar anime
+  const [deleteAnimeOpen,  setDeleteAnimeOpen]  = useState(false)
+  const [deletingAnime,    setDeletingAnime]    = useState(false)
+  const [deleteAnimeError, setDeleteAnimeError] = useState('')
 
   useEffect(() => {
     if (!animeId) return
@@ -69,6 +132,7 @@ export function AnimeDetailPage() {
         setAnime(animeData)
         setReviews([...reviewsData].sort((a, b) => b.score - a.score))
       })
+      .catch(() => setError(true))
       .finally(() => setLoading(false))
   }, [animeId])
 
@@ -82,6 +146,32 @@ export function AnimeDetailPage() {
       })
   }
 
+  async function handleDeleteReview() {
+    if (!anime) return
+    setDeletingReview(true)
+    try {
+      await deleteReview(anime.idAnime)
+      setDeleteReviewOpen(false)
+      refresh()
+    } finally {
+      setDeletingReview(false)
+    }
+  }
+
+  async function handleDeleteAnime() {
+    if (!anime) return
+    setDeletingAnime(true)
+    setDeleteAnimeError('')
+    try {
+      await deleteAnime(anime.idAnime)
+      navigate('/titles', { replace: true })
+    } catch (err) {
+      console.error('Error al eliminar anime:', err)
+      setDeleteAnimeError('No se pudo eliminar el anime. Revisá la consola para más detalles.')
+      setDeletingAnime(false)
+    }
+  }
+
   return (
     <div className={styles.page}>
       <button className={styles.backBtn} onClick={() => navigate(-1)}>
@@ -89,7 +179,12 @@ export function AnimeDetailPage() {
         Volver
       </button>
 
-      {loading ? (
+      {error ? (
+        <div className={styles.errorState}>
+          <p className={styles.errorTitle}>No se pudo cargar el anime</p>
+          <p className={styles.errorSub}>Revisá tu conexión o intentá recargar la página.</p>
+        </div>
+      ) : loading ? (
         <>
           <HeroSkeleton />
           <GroupCardSkeleton />
@@ -108,13 +203,45 @@ export function AnimeDetailPage() {
                 <span className={styles.classicBadge}>CLÁSICO</span>
               )}
             </div>
+
             <div className={styles.heroInfo}>
               <span className={styles.groupLabel}>Página del grupo</span>
               <h1 className={styles.title}>{anime.name}</h1>
-              <button className={styles.editBtn} onClick={() => setModalOpen(true)}>
-                <PenLine size={15} />
-                Editar tu puntuación
-              </button>
+
+              <div className={styles.btnRow}>
+                <button className={styles.editBtn} onClick={() => setScoreOpen(true)}>
+                  <PenLine size={15} />
+                  {anime.userScore === null ? 'Agregar puntuación' : 'Editar tu puntuación'}
+                </button>
+
+                {anime.userScore !== null && (
+                  <button
+                    className={styles.trashBtn}
+                    onClick={() => setDeleteReviewOpen(true)}
+                    title="Eliminar puntuación"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                )}
+              </div>
+
+              <div className={styles.dangerRow}>
+                <button
+                  className={styles.editAnimeBtn}
+                  onClick={() => setEditAnimeOpen(true)}
+                >
+                  <Pencil size={13} />
+                  Editar anime
+                </button>
+                <span className={styles.dangerSep}>·</span>
+                <button
+                  className={styles.deleteAnimeBtn}
+                  onClick={() => setDeleteAnimeOpen(true)}
+                >
+                  <Trash2 size={13} />
+                  Eliminar anime
+                </button>
+              </div>
             </div>
           </div>
 
@@ -169,13 +296,53 @@ export function AnimeDetailPage() {
             )}
           </div>
 
-          {modalOpen && (
+          {/* Modal: editar anime */}
+          {editAnimeOpen && (
+            <AddAnimeModal
+              animeId={anime.idAnime}
+              initialName={anime.name}
+              initialImageUrl={anime.imageUrl}
+              initialClassic={anime.classic}
+              onClose={() => setEditAnimeOpen(false)}
+              onSuccess={(updated) => {
+                setAnime(updated)
+                setEditAnimeOpen(false)
+              }}
+            />
+          )}
+
+          {/* Modal: editar/agregar puntuación */}
+          {scoreOpen && (
             <ScoreModal
               animeName={anime.name}
               animeId={anime.idAnime}
               currentScore={anime.userScore}
-              onClose={() => setModalOpen(false)}
+              onClose={() => setScoreOpen(false)}
               onSuccess={refresh}
+            />
+          )}
+
+          {/* Modal: eliminar puntuación */}
+          {deleteReviewOpen && (
+            <DeleteConfirmModal
+              title="¿Eliminar puntuación?"
+              body={<>Se va a eliminar tu puntuación de <strong>{anime.name}</strong>. Esta acción no se puede deshacer.</>}
+              deleting={deletingReview}
+              onCancel={() => setDeleteReviewOpen(false)}
+              onConfirm={handleDeleteReview}
+            />
+          )}
+
+          {/* Modal: eliminar anime */}
+          {deleteAnimeOpen && (
+            <DeleteConfirmModal
+              title="¿Eliminar anime?"
+              body={<>Se va a eliminar <strong>{anime.name}</strong> del catálogo junto con todas sus puntuaciones. Esta acción no se puede deshacer.</>}
+              confirmLabel="Sí, eliminar"
+              deleting={deletingAnime}
+              error={deleteAnimeError}
+              onCancel={() => { setDeleteAnimeOpen(false); setDeleteAnimeError('') }}
+              onConfirm={handleDeleteAnime}
             />
           )}
         </>

@@ -40,7 +40,7 @@ export function SearchPage() {
   const queryRef      = useRef(initialQ)
   const sentinelRef   = useRef<HTMLDivElement>(null)
   const listRef       = useRef<HTMLDivElement>(null)
-  const debounceRef   = useRef<ReturnType<typeof setTimeout>>()
+  const debounceRef   = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   // ── Fetch ──────────────────────────────────────────────────────────────────
   const fetchPage = useCallback(async (q: string, page: number, reset: boolean) => {
