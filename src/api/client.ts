@@ -27,6 +27,32 @@ export function clearToken(): void {
   localStorage.removeItem(TOKEN_KEY);
 }
 
+// Decodifica el claim `exp` del JWT (sin verificar firma) y determina si ya venció.
+// Devuelve true también si no hay token o si está malformado: en cualquiera de esos
+// casos no se puede usar para autenticar, así que se trata como expirado.
+export function isTokenExpired(): boolean {
+  const token = getToken();
+  if (!token) return true;
+  try {
+    const { exp } = JSON.parse(atob(token.split('.')[1])) as { exp: number };
+    // exp viene en segundos (estándar JWT); Date.now() en milisegundos.
+    return exp * 1000 <= Date.now();
+  } catch {
+    return true;
+  }
+}
+
+// Notifica a la app que la sesión venció: elimina el token y despacha el evento
+// 'session-expired' (que SessionWatcher escucha para hacer logout + redirect).
+// El flag evita dispararlo más de una vez ante fallos concurrentes (HTTP y WebSocket).
+export function notifySessionExpired(): void {
+  clearToken();
+  if (!sessionExpiredFired) {
+    sessionExpiredFired = true;
+    window.dispatchEvent(new CustomEvent('session-expired'));
+  }
+}
+
 // Función interna que realiza todas las peticiones HTTP.
 // Inyecta el token Bearer si existe y parsea la respuesta como JSON.
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
@@ -49,13 +75,8 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
 
   const apiError: ApiError = await res.json();
   // Un 401 significa que el token expiró o es inválido: lo eliminamos y notificamos a la app.
-  // El flag evita que múltiples requests fallidas simultáneas disparen el evento más de una vez.
   if (res.status === 401) {
-    clearToken();
-    if (!sessionExpiredFired) {
-      sessionExpiredFired = true;
-      window.dispatchEvent(new CustomEvent('session-expired'));
-    }
+    notifySessionExpired();
   }
   throw new ApiException(apiError);
 }

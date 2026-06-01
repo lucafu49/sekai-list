@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { TrendingUp } from 'lucide-react'
 import { getAnimes, getReviews, getUsers } from '../api'
 import type { AnimeResponse, ReviewResponse } from '../api'
+import { useWebSocket } from '../hooks/useWebSocket'
 import styles from './DashboardPage.module.css'
 
 function toFive(score: number | null): string {
@@ -76,6 +77,36 @@ export function DashboardPage() {
       })
       .finally(() => setLoading(false))
   }, [])
+
+  // Re-pide el ranking de mejores puntuados al backend. El promedio global y el
+  // orden los calcula el servidor (sort=score), así que ante cualquier alta, edición
+  // o borrado de review re-consultamos en vez de intentar recalcular en el cliente
+  // (el mensaje del WS trae una sola review, insuficiente para reordenar el ranking).
+  function refreshTopAnimes() {
+    getAnimes({ sort: 'score', page: 0 })
+      .then(animePage => setTopAnimes(animePage.content.slice(0, 3)))
+      .catch(() => { /* si falla, el ranking queda con el último valor conocido */ })
+  }
+
+  // Recibe en tiempo real nuevas puntuaciones de cualquier miembro del círculo.
+  // Si ya existe una review del mismo usuario para el mismo anime, la reemplaza;
+  // si no, la agrega al inicio del feed (limitado a 20 entradas).
+  useWebSocket<ReviewResponse>('/topic/reviews', (incoming) => {
+    setReviews(prev => {
+      const filtered = prev.filter(
+        r => !(r.userId === incoming.userId && r.animeId === incoming.animeId)
+      )
+      return [incoming, ...filtered].slice(0, 20)
+    })
+    refreshTopAnimes()
+  })
+
+  // Recibe en tiempo real el borrado de puntuaciones: lo quita del feed y
+  // actualiza el ranking (un borrado también puede cambiar el promedio/orden).
+  useWebSocket<{ userId: number; animeId: number }>('/topic/reviews/deleted', ({ userId, animeId }) => {
+    setReviews(prev => prev.filter(r => !(r.userId === userId && r.animeId === animeId)))
+    refreshTopAnimes()
+  })
 
   return (
     <div className={styles.page}>

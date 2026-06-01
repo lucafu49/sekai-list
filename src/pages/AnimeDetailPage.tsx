@@ -6,6 +6,7 @@ import { getAnime, getReviewsByAnime, deleteReview, deleteAnime } from '../api'
 import type { AnimeResponse, ReviewResponse } from '../api'
 import { ScoreModal } from '../components/ScoreModal/ScoreModal'
 import { AddAnimeModal } from '../components/AddAnimeModal/AddAnimeModal'
+import { useWebSocket } from '../hooks/useWebSocket'
 import styles from './AnimeDetailPage.module.css'
 
 function timeAgo(iso: string): string {
@@ -136,6 +137,36 @@ export function AnimeDetailPage() {
       .finally(() => setLoading(false))
   }, [animeId])
 
+  // Recibe en tiempo real nuevas puntuaciones para este anime.
+  // Si ya existe una review del mismo usuario, la reemplaza (upsert visual);
+  // si no, la agrega. La lista se mantiene ordenada de mayor a menor score.
+  useWebSocket<ReviewResponse>(
+    animeId ? `/topic/reviews/${animeId}` : '',
+    (incoming) => {
+      setReviews(prev => {
+        const filtered = prev.filter(r => r.userId !== incoming.userId)
+        return [...filtered, incoming].sort((a, b) => b.score - a.score)
+      })
+    }
+  )
+
+  // Recibe en tiempo real el borrado de puntuaciones de este anime.
+  // El payload es { userId, animeId }; removemos la review de ese usuario.
+  useWebSocket<{ userId: number; animeId: number }>(
+    animeId ? `/topic/reviews/deleted/${animeId}` : '',
+    ({ userId }) => {
+      setReviews(prev => prev.filter(r => r.userId !== userId))
+    }
+  )
+
+  // El promedio y la cantidad se derivan de `reviews` en lugar de leerse de
+  // `anime`, así se recalculan solos ante cada alta/edición/borrado que llega
+  // por WebSocket. Una sola fuente de verdad evita desincronizaciones.
+  const ratingCount = reviews.length
+  const averageScore = ratingCount > 0
+    ? reviews.reduce((sum, r) => sum + r.score, 0) / ratingCount
+    : null
+
   function refresh() {
     if (!animeId) return
     const id = Number(animeId)
@@ -259,10 +290,10 @@ export function AnimeDetailPage() {
 
             <div className={styles.avgBlock}>
               <span className={styles.avgScore}>
-                {anime.averageScore?.toFixed(1) ?? '—'}
+                {averageScore?.toFixed(1) ?? '—'}
               </span>
               <span className={styles.ratedCount}>
-                {anime.ratingCount} puntuaron
+                {ratingCount} puntuaron
               </span>
             </div>
 
