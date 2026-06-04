@@ -1,12 +1,14 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, PenLine, Trash2, Pencil } from 'lucide-react'
 import { getAnime, getReviewsByAnime, deleteReview, deleteAnime } from '../api'
-import type { AnimeResponse, ReviewResponse } from '../api'
+import type { ReviewResponse } from '../api'
 import { ScoreModal } from '../components/ScoreModal/ScoreModal'
 import { AddAnimeModal } from '../components/AddAnimeModal/AddAnimeModal'
 import { useWebSocket } from '../hooks/useWebSocket'
+import { queryKeys } from '../queryClient'
 import styles from './AnimeDetailPage.module.css'
 
 function timeAgo(iso: string): string {
@@ -104,11 +106,29 @@ function GroupCardSkeleton() {
 export function AnimeDetailPage() {
   const { animeId } = useParams<{ animeId: string }>()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const id = Number(animeId)
 
-  const [anime,   setAnime]   = useState<AnimeResponse | null>(null)
-  const [reviews, setReviews] = useState<ReviewResponse[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error,   setError]   = useState(false)
+  // Datos cacheados por anime: volver a un anime ya visto lo abre al instante.
+  const animeQuery = useQuery({
+    queryKey: queryKeys.anime(id),
+    queryFn: () => getAnime(id),
+    enabled: !!animeId,
+  })
+
+  // Las reviews se ordenan en `select` (al leer la caché), así el WebSocket puede
+  // escribir sin preocuparse por el orden y la lista siempre sale de mayor a menor.
+  const reviewsQuery = useQuery({
+    queryKey: queryKeys.reviewsByAnime(id),
+    queryFn: () => getReviewsByAnime(id),
+    enabled: !!animeId,
+    select: (data: ReviewResponse[]) => [...data].sort((a, b) => b.score - a.score),
+  })
+
+  const anime = animeQuery.data ?? null
+  const reviews = reviewsQuery.data ?? []
+  const loading = animeQuery.isPending || reviewsQuery.isPending
+  const error = animeQuery.isError || reviewsQuery.isError
 
   // Score modal
   const [scoreOpen, setScoreOpen] = useState(false)
@@ -125,27 +145,15 @@ export function AnimeDetailPage() {
   const [deletingAnime,    setDeletingAnime]    = useState(false)
   const [deleteAnimeError, setDeleteAnimeError] = useState('')
 
-  useEffect(() => {
-    if (!animeId) return
-    const id = Number(animeId)
-    Promise.all([getAnime(id), getReviewsByAnime(id)])
-      .then(([animeData, reviewsData]) => {
-        setAnime(animeData)
-        setReviews([...reviewsData].sort((a, b) => b.score - a.score))
-      })
-      .catch(() => setError(true))
-      .finally(() => setLoading(false))
-  }, [animeId])
-
   // Recibe en tiempo real nuevas puntuaciones para este anime.
   // Si ya existe una review del mismo usuario, la reemplaza (upsert visual);
   // si no, la agrega. La lista se mantiene ordenada de mayor a menor score.
   useWebSocket<ReviewResponse>(
     animeId ? `/topic/reviews/${animeId}` : '',
     (incoming) => {
-      setReviews(prev => {
+      queryClient.setQueryData<ReviewResponse[]>(queryKeys.reviewsByAnime(id), (prev = []) => {
         const filtered = prev.filter(r => r.userId !== incoming.userId)
-        return [...filtered, incoming].sort((a, b) => b.score - a.score)
+        return [...filtered, incoming]
       })
     }
   )
@@ -155,7 +163,9 @@ export function AnimeDetailPage() {
   useWebSocket<{ userId: number; animeId: number }>(
     animeId ? `/topic/reviews/deleted/${animeId}` : '',
     ({ userId }) => {
-      setReviews(prev => prev.filter(r => r.userId !== userId))
+      queryClient.setQueryData<ReviewResponse[]>(queryKeys.reviewsByAnime(id), (prev = []) =>
+        prev.filter(r => r.userId !== userId)
+      )
     }
   )
 
@@ -169,12 +179,9 @@ export function AnimeDetailPage() {
 
   function refresh() {
     if (!animeId) return
-    const id = Number(animeId)
-    Promise.all([getAnime(id), getReviewsByAnime(id)])
-      .then(([animeData, reviewsData]) => {
-        setAnime(animeData)
-        setReviews([...reviewsData].sort((a, b) => b.score - a.score))
-      })
+    // Re-trae anime (su userScore/promedio cambia al puntuar) y reviews desde el backend.
+    queryClient.invalidateQueries({ queryKey: queryKeys.anime(id) })
+    queryClient.invalidateQueries({ queryKey: queryKeys.reviewsByAnime(id) })
   }
 
   async function handleDeleteReview() {
@@ -238,6 +245,14 @@ export function AnimeDetailPage() {
             <div className={styles.heroInfo}>
               <span className={styles.groupLabel}>Página del grupo</span>
               <h1 className={styles.title}>{anime.name}</h1>
+              {(anime.year || anime.genres.length > 0) && (
+                <div className={styles.meta}>
+                  {anime.year && <span className={styles.metaYear}>{anime.year}</span>}
+                  {anime.genres.map(g => (
+                    <span key={g} className={styles.metaGenre}>{g}</span>
+                  ))}
+                </div>
+              )}
 
               <div className={styles.btnRow}>
                 <button className={styles.editBtn} onClick={() => setScoreOpen(true)}>
@@ -334,9 +349,11 @@ export function AnimeDetailPage() {
               initialName={anime.name}
               initialImageUrl={anime.imageUrl}
               initialClassic={anime.classic}
+              initialYear={anime.year}
+              initialGenres={anime.genres}
               onClose={() => setEditAnimeOpen(false)}
               onSuccess={(updated) => {
-                setAnime(updated)
+                queryClient.setQueryData(queryKeys.anime(id), updated)
                 setEditAnimeOpen(false)
               }}
             />

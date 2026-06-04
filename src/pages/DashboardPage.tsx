@@ -1,10 +1,14 @@
-import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { TrendingUp } from 'lucide-react'
 import { getAnimes, getReviews, getUsers } from '../api'
-import type { AnimeResponse, ReviewResponse } from '../api'
+import type { ReviewResponse } from '../api'
 import { useWebSocket } from '../hooks/useWebSocket'
+import { queryKeys } from '../queryClient'
 import styles from './DashboardPage.module.css'
+
+// Cantidad de puntuaciones del feed "Últimas Puntuaciones".
+const FEED_SIZE = 10
 
 function toFive(score: number | null): string {
   if (score === null) return '—'
@@ -59,44 +63,45 @@ function ReviewCardSkeleton() {
 
 export function DashboardPage() {
   const navigate = useNavigate()
-  const [topAnimes,  setTopAnimes]  = useState<AnimeResponse[]>([])
-  const [reviews,    setReviews]    = useState<ReviewResponse[]>([])
-  const [totalUsers, setTotalUsers] = useState(0)
-  const [loading,    setLoading]    = useState(true)
+  const queryClient = useQueryClient()
 
-  useEffect(() => {
-    Promise.all([
-      getAnimes({ sort: 'score', page: 0 }),
-      getReviews({ page: 0, size: 20 }),
-      getUsers(),
-    ])
-      .then(([animePage, reviewPage, users]) => {
-        setTopAnimes(animePage.content.slice(0, 3))
-        setReviews(reviewPage.content)
-        setTotalUsers(users.length)
-      })
-      .finally(() => setLoading(false))
-  }, [])
+  // Ranking "Mejores Puntuados": el orden y el promedio los calcula el servidor (sort=score).
+  const { data: topAnimes = [], isPending: topLoading } = useQuery({
+    queryKey: queryKeys.topAnimes,
+    queryFn: () => getAnimes({ sort: 'score', page: 0 }).then(p => p.content.slice(0, 3)),
+  })
 
-  // Re-pide el ranking de mejores puntuados al backend. El promedio global y el
-  // orden los calcula el servidor (sort=score), así que ante cualquier alta, edición
-  // o borrado de review re-consultamos en vez de intentar recalcular en el cliente
-  // (el mensaje del WS trae una sola review, insuficiente para reordenar el ranking).
+  // Feed "Últimas Puntuaciones".
+  const { data: reviews = [], isPending: reviewsLoading } = useQuery({
+    queryKey: queryKeys.reviewsFeed(FEED_SIZE),
+    queryFn: () => getReviews({ page: 0, size: FEED_SIZE }).then(p => p.content),
+  })
+
+  // Lista de usuarios del círculo: casi nunca cambia, la cacheamos sin caducidad.
+  const { data: users = [] } = useQuery({
+    queryKey: queryKeys.users,
+    queryFn: getUsers,
+    staleTime: Infinity,
+  })
+  const totalUsers = users.length
+
+  // Re-pide el ranking al backend invalidando su entrada de caché. El mensaje del WS
+  // trae una sola review, insuficiente para reordenar el ranking en el cliente, así que
+  // ante cualquier alta/edición/borrado dejamos que el servidor recalcule (sort=score).
   function refreshTopAnimes() {
-    getAnimes({ sort: 'score', page: 0 })
-      .then(animePage => setTopAnimes(animePage.content.slice(0, 3)))
-      .catch(() => { /* si falla, el ranking queda con el último valor conocido */ })
+    queryClient.invalidateQueries({ queryKey: queryKeys.topAnimes })
   }
 
   // Recibe en tiempo real nuevas puntuaciones de cualquier miembro del círculo.
   // Si ya existe una review del mismo usuario para el mismo anime, la reemplaza;
-  // si no, la agrega al inicio del feed (limitado a 20 entradas).
+  // si no, la agrega al inicio del feed (limitado a FEED_SIZE entradas).
+  // Escribe directo en la caché de Query para que el feed quede consistente.
   useWebSocket<ReviewResponse>('/topic/reviews', (incoming) => {
-    setReviews(prev => {
+    queryClient.setQueryData<ReviewResponse[]>(queryKeys.reviewsFeed(FEED_SIZE), (prev = []) => {
       const filtered = prev.filter(
         r => !(r.userId === incoming.userId && r.animeId === incoming.animeId)
       )
-      return [incoming, ...filtered].slice(0, 20)
+      return [incoming, ...filtered].slice(0, FEED_SIZE)
     })
     refreshTopAnimes()
   })
@@ -104,7 +109,9 @@ export function DashboardPage() {
   // Recibe en tiempo real el borrado de puntuaciones: lo quita del feed y
   // actualiza el ranking (un borrado también puede cambiar el promedio/orden).
   useWebSocket<{ userId: number; animeId: number }>('/topic/reviews/deleted', ({ userId, animeId }) => {
-    setReviews(prev => prev.filter(r => !(r.userId === userId && r.animeId === animeId)))
+    queryClient.setQueryData<ReviewResponse[]>(queryKeys.reviewsFeed(FEED_SIZE), (prev = []) =>
+      prev.filter(r => !(r.userId === userId && r.animeId === animeId))
+    )
     refreshTopAnimes()
   })
 
@@ -116,7 +123,7 @@ export function DashboardPage() {
           Mejores Puntuados
         </h2>
         <div className={styles.topGrid}>
-          {loading
+          {topLoading
             ? Array.from({ length: 3 }, (_, i) => <TopCardSkeleton key={i} />)
             : topAnimes.map((anime, i) => (
               <div
@@ -147,7 +154,7 @@ export function DashboardPage() {
       <section className={styles.section}>
         <h2 className={styles.sectionTitle}>Últimas Puntuaciones</h2>
         <div className={styles.reviewList}>
-          {loading
+          {reviewsLoading
             ? Array.from({ length: 5 }, (_, i) => <ReviewCardSkeleton key={i} />)
             : reviews.map((review, i) => (
               <div
@@ -179,7 +186,16 @@ export function DashboardPage() {
                         </span>
                       </div>
                   }
-                  <p className={styles.reviewAnimeName}>{review.animeName}</p>
+                  <div className={styles.reviewNameCol}>
+                    <p className={styles.reviewAnimeName}>{review.animeName}</p>
+                    {review.genres && review.genres.length > 0 && (
+                      <div className={styles.reviewGenres}>
+                        {review.genres.slice(0, 3).map(g => (
+                          <span key={g} className={styles.reviewGenre}>{g}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                   <span className={styles.reviewScore}>
                     {review.score}
                     <span className={styles.scoreUnit}>/5</span>

@@ -12,6 +12,8 @@ export interface AnimeRequest {
   name: string;
   imageUrl: string;
   classic: boolean;
+  year?: number | null;
+  genres?: string[];
 }
 
 export interface ReviewRequest {
@@ -31,6 +33,8 @@ export interface AnimeResponse {
   name: string;
   imageUrl: string;
   classic: boolean;
+  year: number | null;
+  genres: string[];            // vacío si aún no se cargaron géneros
   averageScore: number | null; // null si el anime aún no tiene ninguna reseña
   ratingCount: number;         // cantidad de usuarios que puntuaron el anime
   userScore: number | null;    // null si el usuario autenticado no puntuó este anime todavía
@@ -45,6 +49,7 @@ export interface ReviewResponse {
   username: string;
   score: number;
   createdAt: string; // ISO timestamp — usado para mostrar tiempo relativo ("hace Xh")
+  genres: string[];  // géneros del anime; vacío si aún no se cargaron
 }
 
 export interface CircleMemberRating {
@@ -57,6 +62,8 @@ export interface TitleResponse {
   name: string;
   imageUrl: string;
   classic: boolean;
+  year: number | null;
+  genres: string[];
   circleAverageScore: number | null;
   circleRatingCount: number;
   totalCircleSize: number;

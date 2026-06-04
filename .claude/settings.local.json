@@ -5,7 +5,11 @@
       "Bash(npm run *)",
       "Bash(dir src *)",
       "Bash(findstr /E \"\\\\.\\(ts|tsx|json\\)$\")",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\lucas\\\\OneDrive\\\\Documentos\\\\Prog\\\\Proyectos Pagos\\\\anime-tracker\\\\sekai-list\" -Force)",
+      "Bash(Select-Object Name, PSIsContainer)",
+      "Bash(Format-Table -AutoSize)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\lucas\\\\OneDrive\\\\Documentos\\\\Prog\\\\Proyectos Pagos\\\\anime-tracker\\\\sekai-list\\\\src\" -Recurse | Select-Object FullName | ForEach-Object { $_.FullName -replace [regex]::Escape\\(\"C:\\\\Users\\\\lucas\\\\OneDrive\\\\Documentos\\\\Prog\\\\Proyectos Pagos\\\\anime-tracker\\\\sekai-list\"\\), \".\" } | Sort-Object)"
     ]
   }
 }

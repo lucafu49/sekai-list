@@ -1,8 +1,10 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import { ChevronLeft } from 'lucide-react'
 import { getUsers, getReviewsByUser } from '../api'
-import type { UserResponse, ReviewResponse } from '../api'
+import type { ReviewResponse } from '../api'
+import { queryKeys } from '../queryClient'
 import styles from './UserPage.module.css'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -38,22 +40,25 @@ export function UserPage() {
   const numId = Number(userId)
   const navigate = useNavigate()
 
-  const [pageUser, setPageUser] = useState<UserResponse | null>(null)
-  const [reviews,  setReviews]  = useState<ReviewResponse[]>([])
-  const [loading,  setLoading]  = useState(true)
-  const [error,    setError]    = useState(false)
+  // Lista de usuarios: compartida con el resto de la app (una sola request).
+  const usersQuery = useQuery({
+    queryKey: queryKeys.users,
+    queryFn: getUsers,
+    staleTime: Infinity,
+  })
+  const pageUser = usersQuery.data?.find(u => u.idUser === numId) ?? null
 
-  useEffect(() => {
-    if (!numId) return
-    setError(false)
-    Promise.all([getUsers(), getReviewsByUser(numId)])
-      .then(([users, revs]) => {
-        setPageUser(users.find(u => u.idUser === numId) ?? null)
-        setReviews([...revs].sort((a, b) => b.score - a.score))
-      })
-      .catch(() => setError(true))
-      .finally(() => setLoading(false))
-  }, [numId])
+  // Reviews del usuario, ordenadas por score (en `select`, al leer la caché).
+  const reviewsQuery = useQuery({
+    queryKey: queryKeys.reviewsByUser(numId),
+    queryFn: () => getReviewsByUser(numId),
+    enabled: !!numId,
+    select: (data: ReviewResponse[]) => [...data].sort((a, b) => b.score - a.score),
+  })
+  const reviews = reviewsQuery.data ?? []
+
+  const loading = usersQuery.isPending || reviewsQuery.isPending
+  const error = usersQuery.isError || reviewsQuery.isError
 
   // ── Estadísticas ─────────────────────────────────────────────────────────────
   const stats = useMemo(() => {

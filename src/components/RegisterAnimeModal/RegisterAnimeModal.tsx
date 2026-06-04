@@ -134,7 +134,6 @@ export function RegisterAnimeModal({ onClose, onSelectAnime }: RegisterAnimeModa
               value={query}
               onChange={(e) => handleInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              autoFocus
             />
           </div>
 

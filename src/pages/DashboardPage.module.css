@@ -257,8 +257,16 @@
   text-transform: uppercase;
 }
 
-.reviewAnimeName {
+/* Columna que agrupa el título del anime y sus géneros */
+.reviewNameCol {
   flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.reviewAnimeName {
   font-size: 1rem;
   font-weight: 700;
   color: var(--color-text);
@@ -267,6 +275,22 @@
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+}
+
+/* Fila de chips de género bajo el título */
+.reviewGenres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.reviewGenre {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--color-muted);
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  padding: 1px 8px;
 }
 
 /* Score: círculo dorado */

@@ -1,8 +1,9 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import { Search } from 'lucide-react'
 import { getTitles } from '../api'
-import type { TitleResponse } from '../api'
+import { queryKeys } from '../queryClient'
 import styles from './TitlesPage.module.css'
 
 function initials(username: string): string {
@@ -26,17 +27,11 @@ function TitleCardSkeleton() {
 export function TitlesPage() {
   const navigate = useNavigate()
 
-  // ── Data (se carga una sola vez) ───────────────────────────────────────────
-  const [allTitles, setAllTitles] = useState<TitleResponse[]>([])
-  const [loading,   setLoading]   = useState(true)
-  const [error,     setError]     = useState(false)
-
-  useEffect(() => {
-    getTitles()
-      .then(setAllTitles)
-      .catch(() => setError(true))
-      .finally(() => setLoading(false))
-  }, [])
+  // ── Data (cacheada: al volver a la página se sirve al instante y revalida) ──
+  const { data: allTitles = [], isPending: loading, isError: error } = useQuery({
+    queryKey: queryKeys.titles,
+    queryFn: () => getTitles(),
+  })
 
   // ── Filtros (todos client-side) ────────────────────────────────────────────
   const [nameQuery,   setNameQuery]   = useState('')
@@ -144,7 +139,13 @@ export function TitlesPage() {
 
                     <div className={styles.nameCol}>
                       <p className={styles.name}>{t.name}</p>
-                      {t.classic && <span className={styles.classicBadge}>CLÁSICO</span>}
+                      <div className={styles.metaRow}>
+                        {t.year && <span className={styles.metaYear}>{t.year}</span>}
+                        {t.genres.slice(0, 3).map(g => (
+                          <span key={g} className={styles.metaGenre}>{g}</span>
+                        ))}
+                        {t.classic && <span className={styles.classicBadge}>CLÁSICO</span>}
+                      </div>
                     </div>
 
                     <div className={styles.right}>
